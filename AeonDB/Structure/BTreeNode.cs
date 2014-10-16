@@ -83,7 +83,7 @@ namespace AeonDB.Structure
                         bw.Write(values[i]);
                     }
 
-                    for (int i = 0; i < ((2 * tree.Order) - 1); i++)
+                    for (int i = 0; i < ((2 * tree.Order)); i++)
                     {
                         bw.Write(this.childrenPositions[i]);
                     }
@@ -97,26 +97,31 @@ namespace AeonDB.Structure
         internal void Load(FileStream file)
         {
             file.Seek(this.position, SeekOrigin.Begin);
+            var node = new byte[tree.NodeSize];
+            file.Read(node, 0, (int)tree.NodeSize);
 
-            var br = new BinaryReader(file);
-            this.valueCount = br.ReadUInt32();
-            this.isLeaf = br.ReadBoolean();
-            for (int i = 0; i < ((2 * tree.Order) - 1); i++)
+            using (var ms = new MemoryStream(node))
             {
-                this.keys[i] = br.ReadInt64();
-            }
+                using (var br = new BinaryReader(ms))
+                {
+                    this.valueCount = br.ReadUInt32();
+                    this.isLeaf = br.ReadBoolean();
+                    for (int i = 0; i < ((2 * tree.Order) - 1); i++)
+                    {
+                        this.keys[i] = br.ReadInt64();
+                    }
 
-            for (int i = 0; i < ((2 * tree.Order) - 1); i++)
-            {
-                this.values[i] = br.ReadInt64();
-            }
+                    for (int i = 0; i < ((2 * tree.Order) - 1); i++)
+                    {
+                        this.values[i] = br.ReadInt64();
+                    }
 
-            for (int i = 0; i < ((2 * tree.Order) - 1); i++)
-            {
-                this.childrenPositions[i] = br.ReadInt64();
+                    for (int i = 0; i < ((2 * tree.Order)); i++)
+                    {
+                        this.childrenPositions[i] = br.ReadInt64();
+                    }
+                }
             }
-
-            // Don't dispose the BinaryReader, we want to keep the FileStream open.
         }
 
         internal void Split(BTreeNode child, int medianIndex, FileStream file)
@@ -149,7 +154,7 @@ namespace AeonDB.Structure
             child.Save(file);
 
             // Move all the child up 1 to make room for the new node
-            for (i = this.valueCount + 1; i > medianIndex; i--)
+            for (i = this.valueCount + 1; i > medianIndex + 1; i--)
             {
                 this.children[i] = this.children[i - 1];
                 this.childrenPositions[i] = this.childrenPositions[i - 1];
@@ -166,7 +171,7 @@ namespace AeonDB.Structure
             }
 
             this.keys[medianIndex] = child.keys[tree.Order - 1];
-            this.values[medianIndex] = child.keys[tree.Order - 1];
+            this.values[medianIndex] = child.values[tree.Order - 1];
             this.valueCount++;
             this.Save(file);
 

@@ -100,16 +100,22 @@ namespace AeonDB.Structure
         private void Load()
         {
             this.file = new FileStream(this.fileName, FileMode.Open, FileAccess.Read, FileShare.None);
+            var header = new byte[HeaderSize];
+            file.Read(header, 0, HeaderSize);
 
-            var br = new BinaryReader(file);
-            this.order = br.ReadUInt32();
-            this.nodeSize = br.ReadInt64();
-            var rootPosition = br.ReadInt64();
-            this.root = new BTreeNode(this, rootPosition);
-
+            using (var ms = new MemoryStream(header))
+            {
+                using (var br = new BinaryReader(ms))
+                {
+                    this.order = br.ReadUInt32();
+                    this.nodeSize = br.ReadInt64();
+                    var rootPosition = br.ReadInt64();
+                    this.root = new BTreeNode(this, rootPosition);
+                }
+            }
+            
             this.root.Load(file);
 
-            br.Dispose();
             this.file.Close();
             this.file = null;
         }
@@ -139,7 +145,7 @@ namespace AeonDB.Structure
                 // Update the header for the new root.
                 this.Save(true);
 
-                this.root.Split(root, 0, file);
+                this.root.Split(oldRoot, 0, file);
                 this.root.Insert(key, value, file);
 
                 // Only need to leave root in memory so can dispose the old root.
