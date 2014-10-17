@@ -7,9 +7,23 @@ using System.Threading.Tasks;
 
 namespace AeonDB.Structure
 {
-    public class BTree : IDisposable
+    /// <summary>
+    /// Class represents a BTree that is stored on the filesystem.
+    /// Keys and values are both Int64.
+    /// </summary>
+    internal class BTree : IDisposable
     {
-        private const int HeaderSize = sizeof(uint) + sizeof(long) + sizeof(long); // order + nodeSize + rootPosition
+        /// <summary>
+        /// The size of the file's header.
+        /// </summary>
+        private const int HeaderSize = sizeof(uint) // order
+            + sizeof(long) // nodeSize
+            + sizeof(long) // rootPosition
+            + sizeof(int) // version
+            + 8; // magic number
+
+        private const long MagicNumber = 0x41454f4e494e4458;
+        private const int Version = 1;
 
         private BTreeNode root;
         private uint order;
@@ -19,10 +33,12 @@ namespace AeonDB.Structure
 
         /// <summary>
         /// Creates a new BTree at the specified location, with the specified order.
+        /// If the file already exists, <paramref name="order"/> will be ignored and 
+        /// overwritten with the order of the existing tree on the file system.
         /// </summary>
         /// <param name="fileName">The file path for the BTree.</param>
         /// <param name="order">The order of the BTree.</param>
-        public BTree(string fileName, uint order)
+        internal BTree(string fileName, uint order)
         {
             this.fileName = fileName;
             this.order = order;
@@ -38,55 +54,85 @@ namespace AeonDB.Structure
 
         /// <summary>
         /// Initialises a new BTree from the specified file.
+        /// The file must already exist.
         /// </summary>
         /// <param name="fileName">The name of the file.</param>
-        public BTree(string fileName)
+        internal BTree(string fileName)
         {
             this.fileName = fileName;
             this.Load();
         }
 
+        /// <summary>
+        /// Gets the order of the tree.
+        /// </summary>
         internal uint Order
         {
             get { return this.order; }
         }
 
+        /// <summary>
+        /// Gets the number of bytes each node requires.
+        /// </summary>
         internal long NodeSize
         {
             get { return this.nodeSize; }
         }
 
+        /// <summary>
+        /// Saves the tree to the file system.
+        /// </summary>
+        /// <param name="headerOnly">Indicates if only the header should be saved or the whole tree.</param>
         private void Save(bool headerOnly)
         {
+            // Seek to after the header, the location of the first node.
             this.file.Seek(HeaderSize, SeekOrigin.Begin);
 
+            // The root node must be saved first so we can confirm it's position in the file.
+            // This is required for the header.
             if (!headerOnly)
             {
                 this.root.Save(this.file);
             }
 
+            // Seek the beginning of the file system for saving the header.
             this.file.Seek(0, SeekOrigin.Begin);
+
+            // Create the header.
+            // Uses a MemoryStream to Byte[] rather than writing directly to the filestream as 
+            // the BinaryWriter closes the stream when it is disposed and we want to leave the 
+            // open for future transactions.
             var header = new byte[HeaderSize];
             using (var ms = new MemoryStream(header))
             {
                 using (var bw = new BinaryWriter(ms))
                 {
+                    bw.Write(MagicNumber);
+                    bw.Write(Version);
                     bw.Write(this.order);
                     bw.Write(this.nodeSize);
                     bw.Write(this.root.Position);
                 }
             }
 
+            // Write to file.
             file.Write(header, 0, header.Length);
             file.Flush();
         }
 
-        public void Open()
+        /// <summary>
+        /// Opens the file. 
+        /// Operation will fail if the BTree has not been initilised.
+        /// </summary>
+        internal void Open()
         {
             this.file = new FileStream(this.fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
         }
 
-        public void Close()
+        /// <summary>
+        /// Closes the tree's file if it is open.
+        /// </summary>
+        internal void Close()
         {
             if (this.file == null)
             {
@@ -97,29 +143,57 @@ namespace AeonDB.Structure
             this.file = null;
         }
 
+        /// <summary>
+        /// Loads the tree's header and root node.
+        /// </summary>
         private void Load()
         {
             this.file = new FileStream(this.fileName, FileMode.Open, FileAccess.Read, FileShare.None);
             var header = new byte[HeaderSize];
             file.Read(header, 0, HeaderSize);
 
+            long magicNumber;
+            int version;
+
             using (var ms = new MemoryStream(header))
             {
                 using (var br = new BinaryReader(ms))
                 {
+                    magicNumber = br.ReadInt64();
+                    version = br.ReadInt32();
                     this.order = br.ReadUInt32();
                     this.nodeSize = br.ReadInt64();
                     var rootPosition = br.ReadInt64();
                     this.root = new BTreeNode(this, rootPosition);
                 }
             }
+
+            if (magicNumber != MagicNumber)
+            {
+                throw new AeonException("Unrecognised file format");
+            }
+
+            if (version < Version)
+            {
+                // Older format. Upgrade.
+            }
+            else if (version > Version)
+            {
+                throw new AeonException("Database created on newer of AeonDB. You must upgrade software to use.");
+            }
             
+            // Load the root node.
+            // Only the root node is required to be held in memory. Other nodes will be loaded and 
+            // disposed as required.
             this.root.Load(file);
 
             this.file.Close();
             this.file = null;
         }
 
+        /// <summary>
+        /// Intialises the tree on the file system if it does not already exist.
+        /// </summary>
         private void Initialise()
         {
             if (!File.Exists(this.fileName))
@@ -132,7 +206,12 @@ namespace AeonDB.Structure
             this.Load();
         }
 
-        public void Insert(long key, long value)
+        /// <summary>
+        /// Inserts the specified key and value into the tree.
+        /// </summary>
+        /// <param name="key">The key of the value to insert.</param>
+        /// <param name="value">The value to insert.</param>
+        internal void Insert(long key, long value)
         {
             if (this.root.ValueCount == ((2 * this.Order) - 1))
             {
@@ -157,7 +236,12 @@ namespace AeonDB.Structure
             }
         }
 
-        public long this[long key]
+        /// <summary>
+        /// Retrieves the value for the specified key.
+        /// </summary>
+        /// <param name="key">The key to lookup.</param>
+        /// <returns>The value of the specified tree.</returns>
+        internal long this[long key]
         {
             get
             {
@@ -165,6 +249,9 @@ namespace AeonDB.Structure
             }
         }
 
+        /// <summary>
+        /// Disposes of the tree and unloads all resources from memory.
+        /// </summary>
         public void Dispose()
         {
             this.Close();
