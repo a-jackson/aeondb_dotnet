@@ -12,8 +12,14 @@ namespace AeonDB.Test
     {
         static void Main(string[] args)
         {
+            var db = new AeonDB("data");
+            db.CreateTag("test", TagType.Boolean);
+        }
+
+        static void TreePerformance()
+        {
             int max = 1000000;
-            var tree = new BTree("test",100);
+            var tree = new BTree("test", 100);
 
             tree.Open();
             //for (long i = 1; i < max; i++)
@@ -47,6 +53,7 @@ namespace AeonDB.Test
 
             Console.WriteLine(ticks.Average());
             //System.IO.File.Delete("test");
+
         }
     }
 }

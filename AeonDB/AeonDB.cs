@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AeonDB.Tags;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,11 +14,12 @@ namespace AeonDB
     public sealed class AeonDB
     {
         private string directory;
+        private TagDatabase tagDatabase;
 
         public AeonDB(string directory)
         {
             // Ensure the directory separator is appeneded to the path.
-            if (!directory.EndsWith(Path.DirectorySeparatorChar))
+            if (!directory.EndsWith(Path.DirectorySeparatorChar.ToString()))
             {
                 directory = directory + Path.DirectorySeparatorChar;
             }
@@ -35,6 +37,16 @@ namespace AeonDB
             private set { directory = value; }
         }
 
+        public Tag CreateTag(string name, TagType type)
+        {
+            return this.tagDatabase.CreateNewTag(name, type);
+        }
+
+        public Tag GetTag(string name)
+        {
+            return this.tagDatabase[name];
+        }
+
         /// <summary>
         /// Initialises the database. Creates the folder structure if it does not already exist.
         /// </summary>
@@ -47,6 +59,8 @@ namespace AeonDB
                 {
                     dirInfo.Create();
                 }
+
+                this.tagDatabase = new TagDatabase(this);
             }
             catch (Exception e)
             {

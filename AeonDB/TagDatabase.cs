@@ -29,7 +29,6 @@ namespace AeonDB
             }
 
             var tag = CreateTag(name, type);
-            tag.TagId = this.tags.Values.Max(x => x.TagId) + 1;
             this.tags.Add(name, tag);
             this.SaveTags();
 
@@ -98,7 +97,6 @@ namespace AeonDB
                     var name = x.Attribute("name").Value;
                     var type = (TagType)Enum.Parse(typeof(TagType), x.Attribute("type").Value);
                     var tag = CreateTag(name, type);
-                    tag.TagId = int.Parse(x.Attribute("id").Value);
                     return tag;
                 }).ToDictionary(x => x.Name);
         }
@@ -112,8 +110,7 @@ namespace AeonDB
                         this.tags.Select(x => 
                             new XElement("Tag", 
                                 new XAttribute("name", x.Value.Name), 
-                                new XAttribute("type", x.Value.Type.ToString()),
-                                new XAttribute("id", x.Value.TagId)))));
+                                new XAttribute("type", x.Value.Type.ToString())))));
             db.Save(dbFile);
         }
     }
