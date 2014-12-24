@@ -11,12 +11,14 @@ namespace AeonDB.Tags
         private string name;
         private long dataSize;
         private TagType tagType;
+        private AeonDB aeondb;
 
-        internal Tag(string name, long dataSize, TagType tagType)
+        internal Tag(string name, long dataSize, TagType tagType, AeonDB aeondb)
         {
             this.name = name;
             this.dataSize = dataSize;
             this.tagType = tagType;
+            this.aeondb = aeondb;
         }
 
         public string Name

@@ -8,8 +8,8 @@ namespace AeonDB.Tags
 {
     public class Int64Tag : Tag
     {
-        internal Int64Tag(string name)
-            : base(name, sizeof(double), TagType.Int64)
+        internal Int64Tag(string name, AeonDB aeondb)
+            : base(name, sizeof(double), TagType.Int64, aeondb)
         {
 
         }

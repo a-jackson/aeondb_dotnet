@@ -41,6 +41,8 @@
   <ItemGroup>
     <Compile Include="AeonDB.cs" />
     <Compile Include="AeonException.cs" />
+    <Compile Include="Storage\Page.cs" />
+    <Compile Include="Storage\Timestore.cs" />
     <Compile Include="Tags\BooleanTag.cs" />
     <Compile Include="Tags\DoubleTag.cs" />
     <Compile Include="Tags\FloatTag.cs" />
@@ -53,6 +55,7 @@
     <Compile Include="Tags\Tag.cs" />
     <Compile Include="TagDatabase.cs" />
     <Compile Include="TagType.cs" />
+    <Compile Include="Utility\Timestamp.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

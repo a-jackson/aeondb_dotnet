@@ -50,22 +50,22 @@ namespace AeonDB
             switch (type)
             {
                 case TagType.Double:
-                    newTag = new DoubleTag(name);
+                    newTag = new DoubleTag(name, this.aeonDb);
                     break;
                 case TagType.Float:
-                    newTag = new FloatTag(name);
+                    newTag = new FloatTag(name, this.aeonDb);
                     break;
                 case TagType.Boolean:
-                    newTag = new BooleanTag(name);
+                    newTag = new BooleanTag(name, this.aeonDb);
                     break;
                 case TagType.Int16:
-                    newTag = new Int16Tag(name);
+                    newTag = new Int16Tag(name, this.aeonDb);
                     break;
                 case TagType.Int32:
-                    newTag = new Int32Tag(name);
+                    newTag = new Int32Tag(name, this.aeonDb);
                     break;
                 case TagType.Int64:
-                    newTag = new Int64Tag(name);
+                    newTag = new Int64Tag(name, this.aeonDb);
                     break;
                 default:
                     throw new AeonException("Unrecognised tag type.");

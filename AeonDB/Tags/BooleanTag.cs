@@ -8,8 +8,8 @@ namespace AeonDB.Tags
 {
     public class BooleanTag : Tag
     {
-        internal BooleanTag(string name)
-            : base(name, sizeof(double), TagType.Boolean)
+        internal BooleanTag(string name, AeonDB aeonDB)
+            : base(name, sizeof(double), TagType.Boolean, aeonDB)
         {
 
         }

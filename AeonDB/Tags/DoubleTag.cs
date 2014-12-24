@@ -8,8 +8,8 @@ namespace AeonDB.Tags
 {
     public class DoubleTag : Tag
     {
-        internal DoubleTag(string name)
-            : base(name, sizeof(double), TagType.Double)
+        internal DoubleTag(string name, AeonDB aeondb)
+            : base(name, sizeof(double), TagType.Double, aeondb)
         {
 
         }
