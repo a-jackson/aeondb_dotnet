@@ -13,7 +13,10 @@ namespace AeonDB.Test
         static void Main(string[] args)
         {
             var db = new AeonDB("data");
-            db.CreateTag("test", TagType.Boolean);
+            var tag = db.CreateTag("test", TagType.Double);
+
+            for (int i = 0; i < 100000; i++)
+                tag.AddValue(new Utility.Timestamp(DateTime.Now + new TimeSpan(0, 0, i)), (double)i);
         }
 
         static void TreePerformance()

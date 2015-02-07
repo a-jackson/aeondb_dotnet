@@ -41,8 +41,21 @@
   <ItemGroup>
     <Compile Include="AeonDB.cs" />
     <Compile Include="AeonException.cs" />
+    <Compile Include="Storage\BooleanPage.cs" />
+    <Compile Include="Storage\BooleanValue.cs" />
+    <Compile Include="Storage\DoublePage.cs" />
+    <Compile Include="Storage\DoubleValue.cs" />
+    <Compile Include="Storage\FloatPage.cs" />
+    <Compile Include="Storage\FloatValue.cs" />
+    <Compile Include="Storage\Int16Page.cs" />
+    <Compile Include="Storage\Int16Value.cs" />
+    <Compile Include="Storage\Int32Page.cs" />
+    <Compile Include="Storage\Int32Value.cs" />
+    <Compile Include="Storage\Int64Page.cs" />
+    <Compile Include="Storage\Int64Value.cs" />
     <Compile Include="Storage\Page.cs" />
     <Compile Include="Storage\Timestore.cs" />
+    <Compile Include="Storage\StoredValue.cs" />
     <Compile Include="Tags\BooleanTag.cs" />
     <Compile Include="Tags\DoubleTag.cs" />
     <Compile Include="Tags\FloatTag.cs" />
@@ -55,6 +68,9 @@
     <Compile Include="Tags\Tag.cs" />
     <Compile Include="TagDatabase.cs" />
     <Compile Include="TagType.cs" />
+    <Compile Include="Utility\Position.cs" />
+    <Compile Include="Utility\SemanticType.cs" />
+    <Compile Include="Utility\Size.cs" />
     <Compile Include="Utility\Timestamp.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
