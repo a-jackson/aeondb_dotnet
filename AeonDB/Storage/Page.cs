@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace AeonDB.Storage
 {
-    internal abstract class Page
+    internal abstract class Page : IEnumerable<StoredValue>
     {
         /// <summary>
         /// The maximum number of values on a page.
@@ -88,7 +88,7 @@ namespace AeonDB.Storage
             if (this.valueCount == 0)
             {
                 // First value in page.
-                this.pageTime = new Timestamp(timestamp - (timestamp % PageValueCount));
+                this.pageTime = GetPageTimestamp(timestamp);
             }
 
             if (this.valueCount >= PageValueCount || timestamp >= this.PageTime + PageValueCount)
@@ -131,6 +131,29 @@ namespace AeonDB.Storage
             }
 
             file.Write(page, 0, PageSize);
+        }
+
+        /// <summary>
+        /// Returns the timestamp for the page that the specified timestamp would be on.
+        /// </summary>
+        /// <param name="timestamp">The timestamp.</param>
+        /// <returns>The timestamp of the specified timestamp's page.</returns>
+        internal static Timestamp GetPageTimestamp(Timestamp timestamp)
+        {
+            return new Timestamp(timestamp - (timestamp % PageValueCount));
+        }
+
+        public IEnumerator<StoredValue> GetEnumerator()
+        {
+            for (int i = 0; i < this.valueCount;i++)
+            {
+                yield return this.values[i];
+            }
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
         }
     }
 }

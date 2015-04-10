@@ -41,6 +41,7 @@
   <ItemGroup>
     <Compile Include="AeonDB.cs" />
     <Compile Include="AeonException.cs" />
+    <Compile Include="Query.cs" />
     <Compile Include="Storage\BooleanPage.cs" />
     <Compile Include="Storage\BooleanValue.cs" />
     <Compile Include="Storage\DoublePage.cs" />

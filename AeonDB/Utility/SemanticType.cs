@@ -54,12 +54,19 @@ namespace AeonDB.Utility
 
         public static bool operator ==(SemanticType<TData> a, SemanticType<TData> b)
         {
-            return a.Value.Equals(b.Value);
+            if (!object.ReferenceEquals(a, null) && !object.ReferenceEquals(b, null))
+            {
+                return a.Value.Equals(b.Value);
+            }
+            else
+            {
+                return object.ReferenceEquals(a, null) && object.ReferenceEquals(b, null);
+            }
         }
 
         public static bool operator !=(SemanticType<TData> a, SemanticType<TData> b)
         {
-            return !a.Value.Equals(b.Value);
+            return !(a == b);
         }
 
         public static implicit operator TData(SemanticType<TData> a)

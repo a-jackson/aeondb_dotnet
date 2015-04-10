@@ -44,7 +44,7 @@ namespace AeonDB.Storage
 
         public void Dispose()
         {
-            
+            this.Close();
         }
 
         private void Initalise()
@@ -172,7 +172,7 @@ namespace AeonDB.Storage
             this.file = null;
         }
 
-        private void UpdateHeader(FileStream file) 
+        private void UpdateHeader(FileStream file)
         {
             file.Seek(0, SeekOrigin.Begin);
 
@@ -193,7 +193,7 @@ namespace AeonDB.Storage
             file.Write(header, 0, HeaderSize);
         }
 
-        public void AddValue(Timestamp timestamp, object value)
+        public void AddValue(Timestamp timestamp, object value, bool holdOpen = false)
         {
             if (this.index == null && this.currentPage.ValueCount == 0)
             {
@@ -236,18 +236,62 @@ namespace AeonDB.Storage
                     this.currentPage = GetNewPage(newPagePosition);
                     this.currentPage.PageTime = newPageTime;
                     this.index.Insert(newPageTime, newPagePosition);
+                    this.pageCount++;
                 } while (newPageTime + Page.PageValueCount < timestamp);
             }
 
             this.currentPage.AddValue(timestamp, value);
             this.currentPage.Save(this.file);
-            this.Close();
+
+            this.lastTimeSaved = timestamp;
+            this.UpdateHeader(this.file);
+
+            if (!holdOpen)
+            {
+                this.Close();
+            }
+        }
+
+        internal IEnumerable<StoredValue> GetValue(Timestamp timestamp)
+        {
+            var pageTime = Page.GetPageTimestamp(timestamp);
+
+            if (pageTime < this.firstTimeSaved || pageTime > this.lastTimeSaved)
+            {
+                throw new AeonException("Timestamp is outside of tag's data range. No data available.");
+            }
+
+            this.Open();
+
+            try
+            {
+                while (pageTime < this.lastTimeSaved)
+                {
+                    var position = new Position(this.index[pageTime.Value]);
+                    var page = this.GetNewPage(position);
+                    page.Load(this.file);
+
+                    foreach (var value in page)
+                    {
+                        yield return value;
+                    }
+
+                    pageTime = new Timestamp(pageTime.DateTime.AddSeconds(Page.PageValueCount));
+                }
+            }
+            finally
+            {
+                this.Close();
+            }
         }
 
         private void Open()
         {
-            this.file = new FileStream(this.fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-            this.index.Open();
+            if (this.file == null)
+            {
+                this.file = new FileStream(this.fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+                this.index.Open();
+            }
         }
 
         private void Close()

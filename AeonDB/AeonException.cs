@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace AeonDB
 {
+    [Serializable]
     public class AeonException : Exception
     {
         internal AeonException(string message) : base(message) { }

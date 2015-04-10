@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace AeonDB.Tags
 {
-    public abstract class Tag
+    public abstract class Tag : IDisposable
     {
         private string name;
         private Size dataSize;
@@ -40,9 +40,24 @@ namespace AeonDB.Tags
             get { return this.dataSize; }
         }
 
-        public void AddValue(Timestamp timestamp, object value)
+        public void AddValue(Timestamp timestamp, object value, bool holdOpen = false)
         {
-            this.timestore.AddValue(timestamp, value);
+            this.timestore.AddValue(timestamp, value, holdOpen);
+        }
+
+        internal IEnumerable<StoredValue> GetValues(Timestamp startTime)
+        {
+            if (startTime == null)
+            {
+                throw new AeonException("Start time is null.");
+            }
+
+            return this.timestore.GetValue(startTime);
+        }
+
+        public void Dispose()
+        {
+            this.timestore.Dispose();
         }
     }
 }
